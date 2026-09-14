@@ -1,29 +1,36 @@
-# Database
+# FREKANS Database
 
-The database is PostgreSQL-based.
+PostgreSQL is the source of truth for application data. Supabase Auth owns user identity; `public.profiles.id` references `auth.users.id`.
 
-Schema design priorities:
+## Migration
 
-- UUID primary keys
-- Explicit foreign keys
-- Unique constraints for relationships such as follows and likes
-- Indexes on feed, search, relationship, and timestamp access paths
-- `created_at` / `updated_at` timestamps where applicable
-- Soft deletion where audit/history matters
-- Provider-independent music IDs
-- Row-level authorization where Supabase RLS is used
+`migrations/001_initial_schema.sql` creates the first application schema for:
 
-Planned domains:
+- profiles and authentication bootstrap
+- provider-independent music catalog records
+- favorite artists and songs
+- community posts/topics, comments and likes
+- follows
+- direct conversations and messages
+- reports and moderation audit actions
+- notifications
 
-```text
-identity
-profiles
-music
-community
-social
-chat
-moderation
-notifications
-```
+## Music provider rule
 
-Migrations will be added in `database/migrations/` and applied in order.
+Internal UUIDs are the primary keys. Provider IDs are external identifiers and are unique only together with their provider. This keeps FREKANS independent from Spotify or any future music provider.
+
+For the MVP, music data is catalog metadata and outbound links. Listening-history analysis and derived compatibility/listenership metrics are intentionally outside the schema.
+
+## Content model
+
+`posts.type` currently supports:
+
+- `thought` — normal music/community post
+- `song_share` — post linked to a catalog song
+- `topic` — discussion topic with a required title
+
+Comments attach to posts, which keeps the initial API and moderation model simple.
+
+## Security direction
+
+Row Level Security policies will be added when the Supabase project is connected. Business rules should remain behind the API/application layer; the Android client must not contain privileged database credentials.
